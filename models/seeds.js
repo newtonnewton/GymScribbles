@@ -2,17 +2,13 @@ let mongoose = require("mongoose");
 let WeightHistory = require("./weightHistory");
 let DailyWeight   = require("./dailyWeight");
  
-let data = [
+const data = [
     {
         name: "Niudun Wang"
-    },
-    {
-        name: "Desert Mesa"
-    },
-    {
-        name: "Canyon Floor"
     }
 ];
+
+const dws = [{date: '2020-8-7', weight: 87},{date: '2020-9-6', weight: 93}, {date: '2020-9-12', weight: 99}];
  
 function seedDB(){
    //Remove all campgrounds
@@ -27,26 +23,23 @@ function seedDB(){
             }
             console.log("removed all weights!");
              //add a few campgrounds
-            data.forEach(function(seed){
+            data.forEach(async function(seed){
                 WeightHistory.create(seed, function(err, history){
                     if(err){
                         console.log(err)
                     } else {
                         console.log("added a history");
-                        //create a comment
-                        DailyWeight.create(
-                            {
-                                date: '2020-9-6',
-                                weight: 98
-                            }, function(err, dailyweight){
-                                if(err){
-                                    console.log(err);
-                                } else {
-                                    history.records.push(dailyweight);
-                                    history.save();
-                                    console.log("Created a new dailyweight");
-                                }
-                            });
+						DailyWeight.create(dws , function(err, dailyweights){
+							if(err){
+							console.log(err);
+							} else {
+							dailyweights.forEach(function(dw){
+								history.records.push(dw);
+							});
+								history.save();
+							console.log("Created new dailyweights");
+							}
+							});
                     }
                 });
             });

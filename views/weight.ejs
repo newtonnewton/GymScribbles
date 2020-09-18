@@ -23,9 +23,9 @@
 	</div>
 	<p> <%= history %></p>
 	<div>
-		<form >
-			<label for="date_1">Enter Date:
-			<input type="date" name="date_1" required pattern = "\d{4}-\d{2}-\d{2}">
+		<form action='/weight/single' method='POST'>
+			<label for="date">Enter Date:
+			<input type="date" name="date" required pattern = "\d{4}-\d{2}-\d{2}">
 			<span class="validity"></span>
 			</label>
 			<label for="weight"> Body Weight: 
@@ -37,7 +37,8 @@
 <script type="text/javascript">
 	let ctx = document.getElementById("myChart").getContext('2d');
 	//the following is for testing
-	let mytime = <%- JSON.stringify(history.records[0].date) %>;
+	let mylist = <%- JSON.stringify(history.records) %>;
+	let mytime = mylist[2].date;
 
 //date taken from dbs
 let weights = [

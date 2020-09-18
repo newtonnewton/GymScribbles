@@ -33,29 +33,40 @@ app.get("/", function(req, res){
 	res.render("landing");
 });
 //show the plot
-app.get("/plot", function(req, res){
-	 // let data = [80, 83, 85, 90, 91],
-	 // dates = ['Sep-1', 'Sep-5', 'Sep-9', 'Sep-13', 'Sep-17'];
-	
+app.get("/plot", function(req, res){	
 	Entry.findOne({name: 'Niudun'}, function(err, entries){
 		if(err)
 			console.log("error");
 		else res.render("plot", {entries: entries});
 	});
-	// res.render("plot", {data: data, dates: dates});
 });
 
 app.get("/weight", function(req, res){
 	const name = {name: 'Niudun Wang'};
-	// WeightHistory.findOne(name, function(err, history){
-	// 	if(err)
-	// 		console.log(err);
-	// 	else res.render("weight", {history : history});
-	// });
 	WeightHistory.findOne(name).populate("records").exec(function(err, history){
 		if(err)
 			console.log(err);
 		else res.render("weight", {history: history});
+	});
+});
+
+app.post("/weight/single", function(req, res){
+	const name = {name: 'Niudun Wang'};
+	const record = {date: req.body.date, weight: req.body.weight};
+	WeightHistory.findOne(name, function(err, history){
+		if(err)
+			console.log(err);
+		else {
+			DailyWeight.create(record, function(err, dw){
+				if(err)
+					console.log(err);
+				else{
+					history.records.push(dw);
+					history.save();
+				}
+			});
+			res.redirect("/weight");
+		}
 	});
 });
 
