@@ -50,9 +50,14 @@ app.get("/weight", function(req, res){
 	});
 });
 
+// app.get("weight/updated", function(req, res){
+	
+// });
+
 app.post("/weight/single", function(req, res){
 	const name = {name: 'Niudun Wang'};
 	const record = {date: req.body.date, weight: req.body.weight};
+	// const trackerParam = [];
 	WeightHistory.findOne(name, function(err, history){
 		if(err)
 			console.log(err);
@@ -61,6 +66,8 @@ app.post("/weight/single", function(req, res){
 				if(err)
 					console.log(err);
 				else{
+					history.timeTracker = req.body.timeTracker;
+					history.timeFrame = req.body.timeFrame;
 					history.records.push(dw);
 					history.save();
 				}
@@ -71,11 +78,23 @@ app.post("/weight/single", function(req, res){
 });
 
 app.post("/weight/single/:record_id", function(req, res){
+	const name = {name: 'Niudun Wang'};
 	const newRecord = {date: req.body.date, weight: req.body.weight};
 	DailyWeight.findByIdAndUpdate(req.params.record_id, newRecord, function(err, updatedRecord){
 		if(err)
 			console.log(err);
-		else res.redirect("/weight");
+		else {
+			WeightHistory.findOne(name, function(err, history){
+				if(err)
+					console.log(err);
+				else {
+					history.timeTracker = req.body.timeTracker;
+					history.timeFrame = req.body.timeFrame;
+					history.save();
+					res.redirect("/weight");
+				}
+			});
+		}
 	});
 });
 
