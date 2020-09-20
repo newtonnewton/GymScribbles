@@ -1,4 +1,5 @@
 let mongoose = require("mongoose");
+let moment = require("moment");
 let WeightHistory = require("./weightHistory");
 let DailyWeight   = require("./dailyWeight");
  
@@ -8,7 +9,29 @@ const data = [
     }
 ];
 
-const dws = [{date: '2020-8-7', weight: 87},{date: '2020-9-6', weight: 93}, {date: '2020-9-12', weight: 99}];
+const dws = generateTestData('2020-06-02', 180, 180);
+
+//returns an array of strings that represents dates, bounded from above by size 
+function generateTestData(start, span, size){
+    let testDates = new Set();
+    for(i=0; i<size; i++)
+    	testDates.add(randomDate(start, span));
+    let testDatesArray = Array.from(testDates);
+    
+    let testData = [];
+    for(i=0; i<testDatesArray.length; i++)
+    	testData.push({date: testDatesArray[i], weight: getRandomInt(90)});
+    return testData;
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
+
+/*randomly picks a date between start and start+span, note here start and end*/
+function randomDate(start, span){
+    return moment(start, 'YYYY/MM/DD').add(getRandomInt(span), 'day').format('YYYY/MM/DD');
+}
  
 function seedDB(){
    //Remove all campgrounds
