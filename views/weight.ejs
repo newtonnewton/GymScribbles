@@ -4,28 +4,24 @@
 	<title>Line Chart</title>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/locale/af.min.js"></script>>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.28.0/locale/af.min.js"></script>
 	<!-- <script async="" src="//www.google-analytics.com/analytics.js"></script> -->
 	<!-- <script src="https:/charts.org/samples/latest/scales/time/utils.js"></script> -->
 </head>
-<!-- <body>
-<canvas id="myChart"></canvas>
-<form >
-	<input type="text" name="date" placeholder="new date">
-	<input type="text" name="figure" placeholder="new figure">
-	<input type="submit">
-</form>
-<script type="text/javascript" src="chart.js"></script>
-</body> -->
 <body>
 	<div style="width:75%;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
 		<canvas id="myChart" style="display: block; height: 361px; width: 723px;" width="1446" height="722" class="chartjs-render-monitor"></canvas>
 	</div>
-	<p> <%= history %></p>
+	<button id="backwardBtn"> < </button>
+	<button id="forwardBtn"> > </button>
+	<button id="weekBtn"> Week </button>
+	<button id="monthBtn"> Month </button>
+	<button id="yearBtn"> Year </button>
+	<!-- <p> <%= history %></p> -->
 	<div>
 		<form action='/weight/single' method='POST'>
 			<label for="date">Enter Date:
-			<input type="date" name="date" required pattern = "\d{4}-\d{2}-\d{2}">
+			<input type="date" name="date" required pattern = "\d{4}/\d{2}/\d{2}">
 			<span class="validity"></span>
 			</label>
 			<label for="weight"> Body Weight: 
@@ -34,40 +30,68 @@
 			<p><button>Submit</button></p>
 		</form>
 	</div>
+<!-- <script type="text/javascript" src="chart.js"></script> -->
 <script type="text/javascript">
-	let ctx = document.getElementById("myChart").getContext('2d');
-	//the following is for testing
-	let mylist = <%- JSON.stringify(history.records) %>;
-	let mytime = mylist[2].date;
+const standardFormat = 'YYYY/MM/DD';
+let records = <%- JSON.stringify(history.records) %>;
+//change the String format of date to align with YYYY/MM/DD
+records.forEach(function(record){
+	record.date = moment(record.date).format(standardFormat);
+});
+records.sort(recordsComparator);
+const ctx = document.getElementById("myChart").getContext('2d');
+const weekBtnBack = document.getElementById("flickWeeksBack");
+const weekBtnForward = document.getElementById("flickWeeksForward");
 
-//date taken from dbs
-let weights = [
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor(),
-						// randomScalingFactor(),
-						null,
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor()
-					];
+let initialData = findRange(current(), 'week');
+let initialWeights = [];
+let initialDates = [];
+initialData.forEach(function(data){
+   initialWeights.push(data.weight);
+   initialDates.push(data.date);
+});
 
-//input a string of time, 
-function getFigureForWeek(time){
-	let dates = [];
-	let figures = [];
-	for(i=0; i>-7;i--)
-		dates.unshift(moveDateL(time, i));
+const timeFrames = ['week', 'month', 'year'];
+let timeTracker = current();
+let currentFrame = timeFrames[0];
+//Generate data for testing
+// records = generateTestData('2020-06-02', 180, 180);
+//USES INITIALLY GENERATED DATASET FOR TESTING, TO BE REMOVED LATER
+let displayChart = draw(moment().format(standardFormat));
+
+backwardBtn.addEventListener('click', function(){
+	timeTracker = moment(timeTracker,'YYYY/MM/DD').add(-1, currentFrame).format(standardFormat);
+	flickPlot(timeTracker, currentFrame, 0);
+});
+forwardBtn.addEventListener('click', function(){
+    timeTracker = moment(timeTracker,'YYYY/MM/DD').add(1, currentFrame).format(standardFormat);
+	flickPlot(timeTracker, currentFrame, 0);
+});
+weekBtn.addEventListener('click', function(){
+	currentFrame = timeFrames[0];
+	flickPlot(timeTracker, 'week', 0); //TO BE CHANGED, FOR TESTING NOW
+});
+monthBtn.addEventListener('click', function(){
+	currentFrame = timeFrames[1];
+	flickPlot(timeTracker, 'month', 0);
+});
+yearBtn.addEventListener('click', function(){
+	currentFrame = timeFrames[2];
+	flickPlot(timeTracker, 'year', 0); //TO BE CHANGED, FOR TESTING NOW
+});
+
+//ONLY FOR TESTING, TO BE REMOVED LATER
+function initialFigure(time){
 	let config = {
-	type: 'line',
+	type: 'bar',
 	data: {
-					labels: dates,
+					labels: initialDates,
 		datasets: [{
-					label: 'My First dataset',
+					label: 'Body Weight',
 					backgroundColor: "red",
 					borderColor: "red",
 					fill: false,
-					data: weights,
+					data: initialWeights
 				}]
 	},
 	options: {  
@@ -76,50 +100,193 @@ function getFigureForWeek(time){
 					text: 'Chart.js Time Scale'
 				},
                 scales:{
-                	xAxes:[{
-                		// type: 'time',
-                		time:{
-                			displayFormats: {
-                				quarter: 'MMM YYYY'
-                			}
-                		}
-                	}]
+                	yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
                 }
 			}
     };
 	return config;
 }
-		var timeFormat = 'MMM D';
 
-		function newDate(days) {
-			return moment().add(days, 'd').format('MMM DD');
-		}
-
-		function moveDateL(day, dis){
-			return moment(day, 'YYYY/MM/DD').add(dis, 'day').format('L');
-		}
-
-		function moveDateMD(day, dis){
-			return moment(day, 'YYYY/MM/DD').add(dis, 'day').format('MMM DD');
-		}
-
-		function newDateString(days) {
-			return moment().add(days, 'd').format(timeFormat);
-		}
-
-		function randomScalingFactor(){
-			return getRandomInt(30);
-		}
-
-		function getRandomInt(max) {
-            return Math.floor(Math.random() * Math.floor(max));
-        }
-
-function draw(time){
-	var chart = new Chart(ctx, getFigureForWeek(time));
+function newDate(days) {
+	return moment().add(days, 'd').format('MMM DD');
+}
+		
+function moveDate(day, dis, format){
+	return moment(day, 'YYYY/MM/DD').add(dis, 'day').format(format);
 }
 
-draw(mytime);
+function randomScalingFactor(){
+	return getRandomInt(30);
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
+
+//time must be of format YYYY-MM-DD
+function draw(time){
+	return new Chart(ctx, initialFigure(time));
+}
+
+//randomly picks a date between start and start+span, note here start and end
+//strings of format 'MM/DD/YYY'
+function randomDate(start, span){
+    return moment(start, 'YYYY/MM/DD').add(getRandomInt(span), 'day').format('YYYY/MM/DD');
+}
+
+//returns an array of strings that represents dates, bounded from above by size 
+function generateTestData(start, span, size){
+    let testDates = new Set();
+    for(i=0; i<size; i++)
+    	testDates.add(randomDate(start, span));
+    let testDatesArray = Array.from(testDates);
+    
+    let testData = [];
+    for(i=0; i<testDatesArray.length; i++)
+    	testData.push({date: testDatesArray[i], weight: getRandomInt(90)});
+    return testData;
+}
+
+//the format we get is YYYY-MM-DD
+function recordsComparator(recordA, recordB){
+     return moment(recordA.date).isAfter(recordB.date)? 1:-1;
+}
+
+function datesSort(dateA, dateB){
+	return moment(dateA).isAfter(dateB)?1:-1;
+}
+
+/*find an array of training data within in the same range as the given date,
+e.g. 2020-08-20 and range 'month' finds all data whose time is also 2020-08
+range could be 'year'/'month'/'week'. The returned array is populated with 
+users' training data of that time period, weight could be null if the user 
+had no data on that date*/
+function findRange(date, range){
+	const targetParam = [moment(date).year(), moment(date).month(), moment(date).week()];
+	let daysInTargetRange = [];
+	const rangeFactor = (range === 'week')? 7:(range === 'month'? 31: 366);
+	//****************** THIS IS JUST FOR TEST, TO BE CORRECTED LATER
+	for(i=0; i<rangeFactor; i++){
+		const after = moveDate(date, i, standardFormat);
+		if(range === 'week'){ 
+			if(!pushOnCondition(daysInTargetRange, after, 2, targetParam))
+				break;
+		} else if(range === 'month'){
+			if(!pushOnCondition(daysInTargetRange, after, 1, targetParam))
+				break;
+		} else if(range === 'year'){
+			if(!pushOnCondition(daysInTargetRange, after, 0, targetParam))
+				break;
+		}
+	}
+	for(i=-1; i>-1*rangeFactor; i--){
+		const before = moveDate(date, i, standardFormat);
+		if(range === 'week'){ 
+			if(!pushOnCondition(daysInTargetRange, before, 2, targetParam))
+				break;
+		} else if(range === 'month'){
+			if(!pushOnCondition(daysInTargetRange, before, 1, targetParam))
+				break;
+		} else if(range === 'year'){
+			if(!pushOnCondition(daysInTargetRange, before, 0, targetParam))
+				break;
+		}
+	}
+	daysInTargetRange.sort(recordsComparator);
+
+	//fill in the weight field per the records
+    let foundRecords = [];
+	for(record of records){
+        if(range === 'week'){
+        	if(pushRecordsOnCondition(record, targetParam, 2, foundRecords) === 1)
+        		break;
+        } else if(range === 'month'){
+        	if(pushRecordsOnCondition(record, targetParam, 1, foundRecords) === 1)
+        		break;
+        } else if(range === 'year'){
+        	if(pushRecordsOnCondition(record, targetParam, 0, foundRecords) === 1)
+        		break;
+        }
+	}
+	loadRecords(foundRecords, daysInTargetRange);
+	return daysInTargetRange;
+}
+
+//populate the foundRecords array by examining whether rec satisfies the given precision wrt target date,
+//return 0 if could push in,  -1 if rec is not large enough, 1 if rec is larger than needed
+function pushRecordsOnCondition(rec, targetParam, precision, foundRecords){
+	const recWeek = moment(record.date).week();
+	const recMonth  = moment(record.date).month();
+	const recYear = moment(record.date).year();
+	const recParam = [recYear, recMonth, recWeek];
+	if(precision!=2){
+        for(j=0; j<= precision; j++)
+		    if(recParam[j] != targetParam[j])
+			    return (recParam[j] < targetParam[j])? -1: 1;
+	}   else {
+		if(recParam[0] != targetParam[0]) 
+			return (recParam[0] < targetParam[0])? -1: 1;
+		if(recParam[2] != targetParam[2]) 
+			return (recParam[2] < targetParam[2])? -1: 1;
+	}
+	foundRecords.push(rec);
+	return 0;
+}
+
+function pushOnCondition(daysInTargetRange, testDate, precision, targetParam){
+	const dateParam = [moment(testDate).year(), moment(testDate).month(), moment(testDate).week()];
+	if(precision!=2){
+        for(j=0; j<= precision; j++)
+    	    if(dateParam[j] != targetParam[j]) return false;
+	}  else if(dateParam[0] != targetParam[0] || dateParam[2] != targetParam[2]) return false;
+    daysInTargetRange.push({date: testDate, weight: null});
+    return true;
+}
+
+/*both src and target goes from higher date to lower, src is a subset
+of target*/
+function loadRecords(src, target){
+	i=0; j=0;
+	// console.log(src);
+	// console.log(target);
+	while(i<src.length){
+        if(src[i].date === target[j].date){
+        	target[j].weight = src[i].weight;
+        	i++; 
+        }
+        j++;
+	}
+}
+
+function current(){
+	return moment().format(standardFormat);
+}
+
+/*finds an array of training data based on how far it is from the present*/
+function traceBack(targetDate, timeFrame, num){
+	const anchor = moment(targetDate,'YYYY/MM/DD').add(-1*num, timeFrame).format(standardFormat);
+    return findRange(anchor, timeFrame);
+}
+
+function flickPlot(targetDate, timeFrame, num){
+	const history = traceBack(targetDate, timeFrame, num);
+	let dates = [], weights = [];
+	history.forEach(function(dailyRecord){
+		dates.push(dailyRecord.date);
+		weights.push(dailyRecord.weight);
+	});
+	// drawPlot(dates, weights);
+	displayChart.data.labels = dates;
+	displayChart.data.datasets[0].data = weights;
+	console.log(dates);
+	console.log(weights);
+	displayChart.update();
+}
+
 </script>
 </body>
 </html>
