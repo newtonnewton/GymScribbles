@@ -5,7 +5,9 @@ let DailyWeight   = require("./dailyWeight");
  
 const data = [
     {
-        name: "Niudun Wang"
+        name: "Niudun Wang",
+		timeTracker: null,
+		timeFrame: null
     }
 ];
 
