@@ -70,6 +70,15 @@ app.post("/weight/single", function(req, res){
 	});
 });
 
+app.post("/weight/single/:record_id", function(req, res){
+	const newRecord = {date: req.body.date, weight: req.body.weight};
+	DailyWeight.findByIdAndUpdate(req.params.record_id, newRecord, function(err, updatedRecord){
+		if(err)
+			console.log(err);
+		else res.redirect("/weight");
+	});
+});
+
 //update the plot
 app.post("/plot", function(req, res){
 	const name = {name: 'Niudun'};
