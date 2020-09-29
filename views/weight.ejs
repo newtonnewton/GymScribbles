@@ -1,35 +1,52 @@
 <%- include("partials/header_weight") %>
-	<div style="width:75%;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
-		<canvas id="myChart" style="display: block; height: 361px; width: 723px;" width="1446" height="722" class="chartjs-render-monitor"></canvas>
+<div class= "container centered">
+	<div class = "row">
+		<div class="col-10" style="width:100%;">
+			<div class="chartjs-size-monitor chartjs-size-monitor-expand chartjs-size-monitor-shrink">
+			</div>
+			<canvas id="myChart"  class="chartjs-render-monitor"></canvas>
+		</div>
+		<div class="col-2 row align-items-center" >
+			<div class="list-group">
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-secondary" id="backwardBtn">Previous</button>
+					<button type="button" class="btn btn-secondary" id="forwardBtn">Next</button>
+				</div>
+				<div class="btn-group-vertical list-group-item" role="group" style="padding: 0;">
+					<button class="btn btn-secondary btn" id="weekBtn">Week</button>
+				    <button class="btn btn-secondary btn" id="monthBtn">Month</button>
+				    <button class="btn btn-secondary btn" id="yearBtn">Year</button>
+				</div>
+				<div class="list-group-item">
+					<form action='' id='form2' method='POST' class="row align-items-center">
+						<div>
+							<label for="date" >Enter Date:
+						    <input type="date" name="date" id="form2_date" required pattern = "\d{4}/\d{2}/\d{2}" style="width: 100%;">
+						     <span class="validity"></span>
+						    </label>
+						</div>
+						<div>
+							<label for="weight"> Body Weight: 
+							<input type="number" name="weight" id="form2_weight">
+						    </label>
+						    <input id="timeTracker_2" type="hidden" name="timeTracker"> </input>
+						    <input id="timeFrame_2" type="hidden" name="timeFrame"> </input>
+						</div>
+						<div style="width: 100%; text-align: center;">
+							<button class="btn btn-outline-primary" onclick='add()'>Submit</button>
+						</div>
+					</form>
+			    </div>
+			</div>
+		</div>
 	</div>
-	<!-- <form id="form1" action='/weight/single' method='POST'>
-		<input id="timeTracker_1" type="hidden" name="timeTracker"> </input>
-		<input id="timeFrame_1" type="hidden" name="timeFrame"> </input> -->
-		<button id="backwardBtn"> < </button>
-	    <button id="forwardBtn"> > </button>
-	    <button id="weekBtn"> Week </button>
-	    <button id="monthBtn"> Month </button>
-	    <button id="yearBtn"> Year </button>
-	<!-- </form> -->
-	<div>
-		<form action='' id='form2' method='POST'>
-			<label for="date" >Enter Date:
-			<input type="date" name="date" id="form2_date" required pattern = "\d{4}/\d{2}/\d{2}">
-			<span class="validity"></span>
-			</label>
-			<label for="weight"> Body Weight: 
-				<input type="number" name="weight" id="form2_weight">
-			</label>
-			<input id="timeTracker_2" type="hidden" name="timeTracker"> </input>
-		    <input id="timeFrame_2" type="hidden" name="timeFrame"> </input>
-			<p><button onclick='add()'>Submit</button></p>
-		</form>
-	</div>
+</div>
 <!-- <p> <%= history %></p> -->
 <!-- <script type="text/javascript" src="chart.js"></script> -->
 <script type="text/javascript">
 const standardFormat = 'YYYY/MM/DD';
-const personHistory = <%- JSON.stringify(history) %>;
+const personHistory = initializeHistory(history);
+console.log(personHistory);
 let records = personHistory.records;
 const lastTimeTracker = personHistory.timeTracker;
 const lastTimeFrame = personHistory.timeFrame;
@@ -86,6 +103,15 @@ yearBtn.addEventListener('click', function(){
 // 	document.getElementById("timeFrame_1").value = currentFrame;
 // }
 
+function initializeHistory(history){
+	const blankHistory = {
+		records: [],
+		timeTracker: null,
+		timeFrame: null
+	     };
+	const transfer = <%- JSON.stringify(history) %>;
+	return (transfer!== null)?transfer: blankHistory;
+}
 	
 function add(){
 	const form2_date = document.getElementById("form2_date").value;
