@@ -1,9 +1,14 @@
 let mongoose = require('mongoose');
+let WeightHistory = require('./weightHistory');
 let passportLocalMongoose = require('passport-local-mongoose');
 
 let UserSchema = new mongoose.Schema({
 	username: String,
-	password: String
+	password: String,
+	weight_history: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "WeightHistory"
+	}
 });
 UserSchema.plugin(passportLocalMongoose);
 
